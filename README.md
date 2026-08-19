@@ -1,29 +1,30 @@
-# Welcome to your Lovable project
+# Poker Planning
 
-This project was built with [Lovable](https://lovable.dev).
+App de planning poker em Fibonacci: vote com o time, revele as cartas juntos e provoque os colegas com avião de papel, bolinha de papel, tomate e reações. Sem cadastro — só entrar com um nome e o código da mesa.
 
-## Build with Lovable
+O estado da mesa (participantes, votos, histórico) sincroniza em tempo real entre todos os dispositivos via Firebase Realtime Database.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## Desenvolvimento
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requer [Bun](https://bun.sh).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
 
-## Built with
+Copie `.env.example` para `.env` e preencha com as credenciais do seu projeto Firebase (Realtime Database).
+
+## Build
+
+```sh
+bun run build
+```
+
+## Stack
 
 - TanStack Start
 - TypeScript
 - React
 - Tailwind CSS
+- Firebase Realtime Database
