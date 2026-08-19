@@ -183,25 +183,33 @@
 
 /* ---- Mesa minimalista ---- */
 .pp-arena {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5, 20px);
   width: min(100%, 760px);
-  aspect-ratio: 16 / 10;
   margin-inline: auto;
 }
 
-.pp-arena--entrada {
-  width: min(100%, 680px);
-}
-
 .pp-superficie {
-  position: absolute;
-  inset: 24% 26%;
-  border-radius: 999px;
+  width: 100%;
+  min-height: 140px;
+  border-radius: var(--r-2xl, 28px);
   background: var(--gray-light-surface, #f4f4f5);
   border: 1px solid var(--gray-light-border, #e6e6e6);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--sp-5, 20px);
+}
+
+.pp-fileira {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--sp-5, 20px) var(--sp-6, 24px);
+  width: 100%;
 }
 
 .pp-superficie__centro {
@@ -215,6 +223,21 @@
 .pp-superficie__dica {
   font-size: 14px;
   color: var(--gray-medium, #6f6f6f);
+}
+
+.pp-cronometro {
+  font-family: var(--font-display, system-ui);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-medium, #6f6f6f);
+  border: 1px solid var(--gray-light-border, #e6e6e6);
+  border-radius: var(--r-full, 999px);
+  padding: 2px 10px;
+}
+
+.pp-cronometro--urgente {
+  color: var(--error-medium, #d00040);
+  border-color: var(--error-medium, #d00040);
 }
 
 
@@ -426,10 +449,6 @@
 
 
 .pp-lugar {
-  position: absolute;
-  left: var(--pp-lx, 50%);
-  top: var(--pp-ly, 50%);
-  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -438,23 +457,12 @@
   text-align: center;
 }
 
-.pp-lugar--espera .pp-carta,
-.pp-lugar--vazio .pp-carta {
-  animation: pp-respira 3s ease-in-out infinite;
-  animation-delay: var(--pp-delay, 0s);
-}
-
-.pp-lugar--topo {
-  flex-direction: column-reverse;
-}
-
 .pp-lugar--eu .pp-nome {
   color: var(--gray-dark, #1e1e1e);
   font-weight: 600;
 }
 
 .pp-lugar__pessoa {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -467,8 +475,10 @@
   white-space: nowrap;
 }
 
-.pp-observador {
+.pp-gatilho {
   position: relative;
+  display: inline-flex;
+  min-width: 0;
 }
 
 .pp-acoes {
@@ -490,10 +500,7 @@
   z-index: 5;
 }
 
-.pp-lugar__pessoa:hover .pp-acoes,
-.pp-lugar__pessoa:focus-within .pp-acoes,
-.pp-observador:hover .pp-acoes,
-.pp-observador:focus-within .pp-acoes {
+.pp-acoes--aberta {
   opacity: 1;
   pointer-events: auto;
   transform: translate(-50%, 6px);
@@ -519,11 +526,6 @@
   background: var(--gray-light-surface, #f4f4f5);
 }
 
-@keyframes pp-respira {
-  0%, 100% { opacity: 0.55; transform: translateY(0); }
-  50% { opacity: 0.9; transform: translateY(-4px); }
-}
-
 .pp-carta {
   width: 52px;
   height: 74px;
@@ -534,11 +536,6 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
-}
-
-.pp-carta--vazia {
-  border-style: dashed;
-  background: transparent;
 }
 
 .pp-carta--votou {
@@ -697,10 +694,6 @@
 }
 
 @media (max-width: 900px) {
-  .pp-arena {
-    aspect-ratio: 4 / 5;
-  }
-
   .pp-lugar {
     width: 80px;
   }

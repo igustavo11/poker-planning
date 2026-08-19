@@ -1,7 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { estatisticas, lerPerfil, rotuloCarta, useMesa, type Perfil } from "@/lib/mesa-store";
-import { Avatar, BarraDeAcoes, BaralhoFibonacci, MesaOval } from "@/components/poker/mesa-ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  DURACAO_VOTACAO_SEGUNDOS,
+  estatisticas,
+  lerPerfil,
+  rotuloCarta,
+  useMesa,
+  type Perfil,
+} from "@/lib/mesa-store";
+import { Avatar, GatilhoDeAcoes, BaralhoFibonacci, MesaHorizontal } from "@/components/poker/mesa-ui";
 import { CamadaBrincadeiras } from "@/components/poker/CamadaBrincadeiras";
 
 export const Route = createFileRoute("/mesa/$codigo")({
@@ -54,7 +61,36 @@ function MesaPage() {
   const eu = mesa.participantes.find((p) => p.id === perfil?.id) ?? null;
   const votos = jogadores.filter((p) => p.voto).map((p) => p.voto as string);
   const stats = useMemo(() => (mesa.revelada ? estatisticas(votos) : null), [mesa.revelada, votos]);
-  const podeRevelar = !mesa.revelada && votos.length > 0;
+
+  const criadorPresente = mesa.participantes.some((p) => p.id === mesa.criadorId);
+  const souCriador = perfil !== null && perfil.id === mesa.criadorId;
+  // Se o criador saiu da mesa, ninguém fica travado sem poder controlar a rodada.
+  const podeControlar = souCriador || !criadorPresente;
+  const podeRevelar = podeControlar && !mesa.revelada && votos.length > 0;
+
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setAgora(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const segundosRestantes = mesa.revelada
+    ? DURACAO_VOTACAO_SEGUNDOS
+    : Math.max(
+        0,
+        DURACAO_VOTACAO_SEGUNDOS - Math.floor((agora - mesa.votacaoIniciadaEm) / 1000),
+      );
+
+  const autoRevelouRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (mesa.revelada) return;
+    if (segundosRestantes > 0) return;
+    if (votos.length === 0) return;
+    if (!podeControlar) return;
+    if (autoRevelouRef.current === mesa.votacaoIniciadaEm) return;
+    autoRevelouRef.current = mesa.votacaoIniciadaEm;
+    revelar();
+  }, [segundosRestantes, mesa.revelada, mesa.votacaoIniciadaEm, votos.length, podeControlar, revelar]);
 
   async function copiarLink() {
     try {
@@ -103,20 +139,31 @@ function MesaPage() {
       {aviso ? <div className="ab-toast ab-toast--primary pp-toast">{aviso}</div> : null}
 
       <main className="pp-palco">
-        <MesaOval
+        <MesaHorizontal
           jogadores={jogadores}
           revelada={mesa.revelada}
           meuId={perfil?.id ?? null}
           onAcionar={(p, tipo, reacao) => brincar(p.id, tipo, reacao)}
         >
-          {mesa.revelada ? (
-            <button
-              type="button"
-              className="ab-btn ab-btn--md ab-btn--secondary-gray"
-              onClick={novaRodada}
+          {mesa.revelada ? null : (
+            <span
+              className={`pp-cronometro${segundosRestantes <= 10 ? " pp-cronometro--urgente" : ""}`}
             >
-              Nova rodada
-            </button>
+              {segundosRestantes}s
+            </span>
+          )}
+          {mesa.revelada ? (
+            podeControlar ? (
+              <button
+                type="button"
+                className="ab-btn ab-btn--md ab-btn--secondary-gray"
+                onClick={novaRodada}
+              >
+                Nova rodada
+              </button>
+            ) : (
+              <span className="pp-superficie__dica">Aguardando nova rodada</span>
+            )
           ) : podeRevelar ? (
             <button
               type="button"
@@ -129,10 +176,12 @@ function MesaPage() {
             <span className="pp-superficie__dica">
               {jogadores.length <= 1
                 ? "Sozinho por aqui — convide o time"
-                : "Escolha sua carta"}
+                : !podeControlar && votos.length > 0
+                  ? "Aguardando o criador revelar"
+                  : "Escolha sua carta"}
             </span>
           )}
-        </MesaOval>
+        </MesaHorizontal>
 
         {mesa.revelada && stats ? (
           <div className="pp-resultado">
@@ -161,12 +210,15 @@ function MesaPage() {
             {observadores.map((p) => (
               <div key={p.id} className="pp-observador" data-participante={p.id}>
                 <Avatar participante={p} tamanho="sm" />
-                <span className="ab-text-sm pp-nome">{p.nome}</span>
-                {p.id === perfil?.id ? null : (
-                  <BarraDeAcoes
+                {p.id === perfil?.id ? (
+                  <span className="ab-text-sm pp-nome">{p.nome}</span>
+                ) : (
+                  <GatilhoDeAcoes
                     nome={p.nome}
                     onAcionar={(tipo, reacao) => brincar(p.id, tipo, reacao)}
-                  />
+                  >
+                    <span className="ab-text-sm pp-nome">{p.nome}</span>
+                  </GatilhoDeAcoes>
                 )}
               </div>
             ))}

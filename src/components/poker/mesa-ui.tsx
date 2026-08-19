@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CARTAS, iniciais, rotuloCarta, type Participante, type TipoBrincadeira } from "@/lib/mesa-store";
 
 export type Acao = {
@@ -19,27 +19,67 @@ export const ACOES: Acao[] = [
   { chave: "palmas", tipo: "reacao", reacao: "👏", simbolo: "👏", rotulo: "Palmas" },
 ];
 
-export function BarraDeAcoes({
+const ATRASO_FECHAR_MS = 350;
+
+/** Nome + menu de ações vivem no mesmo elemento hoverável, com atraso pra fechar —
+ * assim o cursor consegue atravessar o espaço até um ícone sem o menu sumir no meio do caminho. */
+export function GatilhoDeAcoes({
   nome,
   onAcionar,
+  children,
 }: {
   nome: string;
   onAcionar: (tipo: TipoBrincadeira, reacao?: string) => void;
+  children: React.ReactNode;
 }) {
+  const [aberto, setAberto] = useState(false);
+  const fecharRef = useRef<number | null>(null);
+
+  function cancelarFechamento() {
+    if (fecharRef.current !== null) {
+      window.clearTimeout(fecharRef.current);
+      fecharRef.current = null;
+    }
+  }
+
+  function abrir() {
+    cancelarFechamento();
+    setAberto(true);
+  }
+
+  function fecharComAtraso() {
+    cancelarFechamento();
+    fecharRef.current = window.setTimeout(() => setAberto(false), ATRASO_FECHAR_MS);
+  }
+
+  useEffect(() => cancelarFechamento, []);
+
   return (
-    <div className="pp-acoes">
-      {ACOES.map((a) => (
-        <button
-          key={a.chave}
-          type="button"
-          className="pp-acao"
-          title={a.rotulo}
-          aria-label={`${a.rotulo} para ${nome}`}
-          onClick={() => onAcionar(a.tipo, a.reacao)}
-        >
-          {a.simbolo}
-        </button>
-      ))}
+    <div
+      className="pp-gatilho"
+      onMouseEnter={abrir}
+      onMouseLeave={fecharComAtraso}
+      onFocus={abrir}
+      onBlur={fecharComAtraso}
+    >
+      {children}
+      <div className={`pp-acoes${aberto ? " pp-acoes--aberta" : ""}`}>
+        {ACOES.map((a) => (
+          <button
+            key={a.chave}
+            type="button"
+            className="pp-acao"
+            title={a.rotulo}
+            aria-label={`${a.rotulo} para ${nome}`}
+            onClick={() => {
+              onAcionar(a.tipo, a.reacao);
+              setAberto(false);
+            }}
+          >
+            {a.simbolo}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -61,58 +101,21 @@ export function Avatar({
   );
 }
 
-/** Distribui os lugares na borda de uma elipse, começando embaixo (frente da mesa). */
-function posicao(indice: number, total: number) {
-  const angulo = Math.PI / 2 + (indice * 2 * Math.PI) / Math.max(total, 1);
-  return {
-    x: 50 + 42 * Math.cos(angulo),
-    y: 50 + 40 * Math.sin(angulo),
-  };
-}
-
-function useCoordenadas(x: number, y: number) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.setProperty("--pp-lx", `${x}%`);
-    el.style.setProperty("--pp-ly", `${y}%`);
-  }, [x, y]);
-  return ref;
-}
-
-function LugarVazio({ x, y }: { x: number; y: number }) {
-  const ref = useCoordenadas(x, y);
-  return (
-    <div ref={ref} className={`pp-lugar pp-lugar--vazio${y < 45 ? " pp-lugar--topo" : ""}`}>
-      <div className="pp-carta pp-carta--vazia" aria-hidden="true" />
-    </div>
-  );
-}
-
 export function LugarParticipante({
   participante,
   revelada,
   souEu,
   onAcionar,
-  x,
-  y,
 }: {
   participante: Participante;
   revelada: boolean;
   souEu: boolean;
   onAcionar: (tipo: TipoBrincadeira, reacao?: string) => void;
-  x: number;
-  y: number;
 }) {
-  const ref = useCoordenadas(x, y);
   const votou = Boolean(participante.voto);
 
   return (
-    <div
-      ref={ref}
-      className={`pp-lugar${souEu ? " pp-lugar--eu" : ""}${y < 45 ? " pp-lugar--topo" : ""}`}
-    >
+    <div className={`pp-lugar${souEu ? " pp-lugar--eu" : ""}`}>
       <div
         className={`pp-carta${votou ? " pp-carta--votou" : ""}${
           revelada && votou ? " pp-carta--aberta" : ""
@@ -124,56 +127,48 @@ export function LugarParticipante({
         </span>
       </div>
       <div className="pp-lugar__pessoa">
-        <span className="ab-text-sm pp-nome">{participante.nome}</span>
-        {souEu ? null : <BarraDeAcoes nome={participante.nome} onAcionar={onAcionar} />}
+        {souEu ? (
+          <span className="ab-text-sm pp-nome">{participante.nome}</span>
+        ) : (
+          <GatilhoDeAcoes nome={participante.nome} onAcionar={onAcionar}>
+            <span className="ab-text-sm pp-nome">{participante.nome}</span>
+          </GatilhoDeAcoes>
+        )}
       </div>
     </div>
   );
 }
 
-export function MesaOval({
+export function MesaHorizontal({
   jogadores,
   revelada,
   meuId,
   onAcionar,
-  minimoLugares = 0,
   children,
 }: {
   jogadores: Participante[];
   revelada: boolean;
   meuId: string | null;
   onAcionar: (p: Participante, tipo: TipoBrincadeira, reacao?: string) => void;
-  minimoLugares?: number;
   children: React.ReactNode;
 }) {
-  const total = Math.max(jogadores.length, minimoLugares, 1);
-  const vazios = Math.max(total - jogadores.length, 0);
-
   return (
     <div className="pp-arena">
       <div className="pp-superficie">
         <div className="pp-superficie__centro">{children}</div>
       </div>
 
-      {jogadores.map((p, i) => {
-        const { x, y } = posicao(i, total);
-        return (
+      <div className="pp-fileira">
+        {jogadores.map((p) => (
           <LugarParticipante
             key={p.id}
             participante={p}
             revelada={revelada}
             souEu={p.id === meuId}
             onAcionar={(tipo, reacao) => onAcionar(p, tipo, reacao)}
-            x={x}
-            y={y}
           />
-        );
-      })}
-
-      {Array.from({ length: vazios }, (_, i) => {
-        const { x, y } = posicao(jogadores.length + i, total);
-        return <LugarVazio key={`vazio-${i}`} x={x} y={y} />;
-      })}
+        ))}
+      </div>
     </div>
   );
 }

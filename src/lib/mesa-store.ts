@@ -40,11 +40,15 @@ export type Mesa = {
   historico: Rodada[];
   brincadeiras: Brincadeira[];
   placar: Record<string, number>;
+  criadorId: string | null;
+  votacaoIniciadaEm: number;
 };
 
 export const CARTAS = ["1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "?", "cafe"] as const;
 
 export const CORES = 8;
+
+export const DURACAO_VOTACAO_SEGUNDOS = 30;
 
 const CHAVE_PERFIL = "poker-planning:perfil";
 
@@ -94,6 +98,8 @@ function mesaVazia(codigo: string): Mesa {
     historico: [],
     brincadeiras: [],
     placar: {},
+    criadorId: null,
+    votacaoIniciadaEm: Date.now(),
   };
 }
 
@@ -126,16 +132,19 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
     return () => unsubscribe();
   }, [codigo]);
 
-  // Garante que o participante local esteja na mesa.
+  // Garante que o participante local esteja na mesa. Quem chega primeiro numa
+  // mesa vazia vira o criador (só ele pode revelar cartas e iniciar rodadas).
   useEffect(() => {
     if (!pronto || !perfil) return;
     atualizar((atual) => {
       const existente = atual.participantes.find((p) => p.id === perfil.id);
+      const criadorId = atual.criadorId ?? (atual.participantes.length === 0 ? perfil.id : null);
       if (
         existente &&
         existente.nome === perfil.nome &&
         existente.papel === perfil.papel &&
-        existente.cor === perfil.cor
+        existente.cor === perfil.cor &&
+        criadorId === atual.criadorId
       ) {
         return atual;
       }
@@ -149,6 +158,7 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
       };
       return {
         ...atual,
+        criadorId,
         participantes: existente
           ? atual.participantes.map((p) => (p.id === perfil.id ? participante : p))
           : [...atual.participantes, participante],
@@ -204,6 +214,7 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
           revelada: false,
           historia: "",
           historico,
+          votacaoIniciadaEm: Date.now(),
           participantes: atual.participantes.map((p) => ({ ...p, voto: null })),
         };
       }),
