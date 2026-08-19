@@ -6,7 +6,9 @@ function env(chave: string): string {
   if (!valor) {
     throw new Error(`Variável de ambiente ausente: ${chave}. Confira o seu .env`);
   }
-  return valor;
+  // Remove aspas/barras invertidas coladas nas pontas — sobra comum de copiar
+  // e colar o valor em painéis como o da Vercel.
+  return valor.trim().replace(/^[\s"'\\]+|[\s"'\\]+$/g, "");
 }
 
 const firebaseConfig = {
