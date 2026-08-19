@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { onValue, ref, runTransaction } from "firebase/database";
+import { limitToLast, onValue, push, query, ref, runTransaction } from "firebase/database";
 import { db } from "@/lib/firebase";
 
 export type Papel = "jogador" | "observador";
@@ -38,8 +38,6 @@ export type Mesa = {
   revelada: boolean;
   participantes: Participante[];
   historico: Rodada[];
-  brincadeiras: Brincadeira[];
-  placar: Record<string, number>;
   criadorId: string | null;
   /** null = cronômetro pausado, aguardando o criador iniciar a rodada. */
   votacaoIniciadaEm: number | null;
@@ -100,8 +98,6 @@ function mesaVazia(codigo: string): Mesa {
     revelada: false,
     participantes: [],
     historico: [],
-    brincadeiras: [],
-    placar: {},
     criadorId: null,
     votacaoIniciadaEm: null,
     duracaoVotacaoSegundos: DURACAO_VOTACAO_PADRAO,
@@ -112,8 +108,16 @@ function refMesa(codigo: string) {
   return ref(db, `mesas/${codigo}`);
 }
 
+// Path separado do documento principal da mesa: jogar coisas não pode competir
+// com a mesma transação que voto/revelar/cronômetro usam, ou a escrita atrasa
+// (ou some) quando várias pessoas jogam ao mesmo tempo.
+function refBrincadeiras(codigo: string) {
+  return ref(db, `brincadeiras/${codigo}`);
+}
+
 export function useMesa(codigo: string, perfil: Perfil | null) {
   const [mesa, setMesa] = useState<Mesa>(() => mesaVazia(codigo));
+  const [brincadeiras, setBrincadeiras] = useState<Brincadeira[]>([]);
   const [pronto, setPronto] = useState(false);
 
   const atualizar = useCallback(
@@ -133,6 +137,20 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
       const valor = snapshot.val() as Mesa | null;
       setMesa(valor ? { ...mesaVazia(codigo), ...valor } : mesaVazia(codigo));
       setPronto(true);
+    });
+    return () => unsubscribe();
+  }, [codigo]);
+
+  useEffect(() => {
+    const consulta = query(refBrincadeiras(codigo), limitToLast(30));
+    const unsubscribe = onValue(consulta, (snapshot) => {
+      const valor = snapshot.val() as Record<string, Omit<Brincadeira, "id">> | null;
+      const lista = valor
+        ? Object.entries(valor)
+            .map(([id, b]) => ({ ...b, id }))
+            .sort((a, b) => a.criadoEm - b.criadoEm)
+        : [];
+      setBrincadeiras(lista);
     });
     return () => unsubscribe();
   }, [codigo]);
@@ -247,28 +265,23 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
   const brincar = useCallback(
     (paraId: string, tipo: TipoBrincadeira, reacao?: string) => {
       if (!perfil) return;
-      atualizar((atual) => ({
-        ...atual,
-        brincadeiras: [
-          ...atual.brincadeiras.filter((b) => Date.now() - b.criadoEm < 6000),
-          {
-            id: novoId(),
-            tipo,
-            reacao,
-            deId: perfil.id,
-            deNome: perfil.nome,
-            paraId,
-            criadoEm: Date.now(),
-          },
-        ].slice(-12),
-        placar: { ...atual.placar, [perfil.id]: (atual.placar[perfil.id] ?? 0) + 1 },
-      }));
+      const nova: Omit<Brincadeira, "id"> = {
+        tipo,
+        reacao,
+        deId: perfil.id,
+        deNome: perfil.nome,
+        paraId,
+        criadoEm: Date.now(),
+      };
+      // JSON.parse/stringify remove `reacao: undefined`, que o Realtime Database rejeita.
+      void push(refBrincadeiras(codigo), JSON.parse(JSON.stringify(nova)));
     },
-    [atualizar, perfil],
+    [codigo, perfil],
   );
 
   return {
     mesa,
+    brincadeiras,
     pronto,
     votar,
     definirHistoria,

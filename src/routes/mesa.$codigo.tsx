@@ -47,6 +47,7 @@ function MesaPage() {
 
   const {
     mesa,
+    brincadeiras,
     votar,
     definirHistoria,
     definirDuracao,
@@ -301,7 +302,7 @@ function MesaPage() {
         </p>
       </footer>
 
-      <CamadaBrincadeiras brincadeiras={mesa.brincadeiras} />
+      <CamadaBrincadeiras brincadeiras={brincadeiras} />
     </div>
   );
 }

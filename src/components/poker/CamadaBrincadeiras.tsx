@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Brincadeira } from "@/lib/mesa-store";
+import { IconeAcao } from "@/components/poker/mesa-ui";
 
 type Voo = {
   id: string;
@@ -35,27 +36,11 @@ function Objeto({ voo, onFim }: { voo: Voo; onFim: (id: string) => void }) {
     return () => window.clearTimeout(t);
   }, [voo, onFim]);
 
+  const chaveIcone = voo.tipo === "reacao" ? (voo.reacao ?? "") : voo.tipo;
+
   return (
-    <div ref={ref} className={`pp-voo pp-voo--${voo.tipo}`} aria-hidden="true">
-      {voo.tipo === "aviao" ? (
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" role="presentation">
-          <path d="M2 12 22 3l-5 18-4.5-6.5L2 12Z" fill="currentColor" />
-          <path d="m12.5 14.5 9.5-11.5-14 8.5" stroke="var(--base-white)" strokeWidth="0.8" />
-        </svg>
-      ) : null}
-      {voo.tipo === "bolinha" ? (
-        <svg width="26" height="26" viewBox="0 0 24 24" role="presentation">
-          <circle cx="12" cy="12" r="9" fill="currentColor" />
-          <path d="M7 10l4 3-2 4M14 7l3 4-4 3" stroke="var(--gray-medium)" strokeWidth="1" fill="none" />
-        </svg>
-      ) : null}
-      {voo.tipo === "tomate" ? (
-        <svg width="28" height="28" viewBox="0 0 24 24" role="presentation">
-          <circle cx="12" cy="14" r="8" fill="currentColor" />
-          <path d="M8 6l4 2 4-2-4 1z" fill="var(--success-medium-dark)" />
-        </svg>
-      ) : null}
-      {voo.tipo === "reacao" ? <span className="pp-voo__reacao">{voo.reacao}</span> : null}
+    <div ref={ref} className={`pp-voo pp-voo--${voo.tipo} pp-voo--${chaveIcone}`} aria-hidden="true">
+      <IconeAcao chave={chaveIcone} tamanho={30} />
     </div>
   );
 }

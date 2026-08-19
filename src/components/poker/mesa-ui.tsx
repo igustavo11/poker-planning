@@ -5,19 +5,91 @@ export type Acao = {
   chave: string;
   tipo: TipoBrincadeira;
   reacao?: string;
-  simbolo: string;
   rotulo: string;
 };
 
 export const ACOES: Acao[] = [
-  { chave: "aviao", tipo: "aviao", simbolo: "✈️", rotulo: "Avião de papel" },
-  { chave: "bolinha", tipo: "bolinha", simbolo: "⚫", rotulo: "Bolinha de papel" },
-  { chave: "tomate", tipo: "tomate", simbolo: "🍅", rotulo: "Tomate" },
-  { chave: "fogo", tipo: "reacao", reacao: "🔥", simbolo: "🔥", rotulo: "Fogo" },
-  { chave: "cafe", tipo: "reacao", reacao: "☕", simbolo: "☕", rotulo: "Café" },
-  { chave: "sono", tipo: "reacao", reacao: "💤", simbolo: "💤", rotulo: "Sono" },
-  { chave: "palmas", tipo: "reacao", reacao: "👏", simbolo: "👏", rotulo: "Palmas" },
+  { chave: "aviao", tipo: "aviao", rotulo: "Avião de papel" },
+  { chave: "bolinha", tipo: "bolinha", rotulo: "Bolinha de papel" },
+  { chave: "tomate", tipo: "tomate", rotulo: "Tomate" },
+  { chave: "fogo", tipo: "reacao", reacao: "fogo", rotulo: "Fogo" },
+  { chave: "cafe", tipo: "reacao", reacao: "cafe", rotulo: "Café" },
+  { chave: "sono", tipo: "reacao", reacao: "sono", rotulo: "Sono" },
+  { chave: "palmas", tipo: "reacao", reacao: "palmas", rotulo: "Palmas" },
 ];
+
+/** Ícones vetoriais no lugar de emoji — reaproveitado pela animação em CamadaBrincadeiras. */
+export function IconeAcao({ chave, tamanho = 15 }: { chave: string; tamanho?: number }) {
+  switch (chave) {
+    case "aviao":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M2 12 22 3l-5 18-4.5-6.5L2 12Z" fill="currentColor" />
+        </svg>
+      );
+    case "bolinha":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="currentColor" />
+          <path
+            d="M7 10l4 3-2 4M14 7l3 4-4 3"
+            stroke="var(--base-white, #fff)"
+            strokeWidth="1"
+            fill="none"
+          />
+        </svg>
+      );
+    case "tomate":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="14" r="8" fill="currentColor" />
+          <path d="M8 6l4 2 4-2-4 1z" fill="var(--success-medium-dark, #00a700)" />
+        </svg>
+      );
+    case "fogo":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 2c1.1 3-.2 4.4-1.5 5.8C9.2 9.3 8 10.9 8 13a4 4 0 0 0 8 .3c.3-1.4-.1-2.4-.7-3.2.3 1.5-.5 2.1-1 2-.1-2.7-1-4.8-2.3-10.1Z"
+            fill="currentColor"
+          />
+        </svg>
+      );
+    case "cafe":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z" fill="currentColor" />
+          <path
+            d="M16 9.5h1a2.25 2.25 0 0 1 0 4.5h-1"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+          />
+          <path
+            d="M8 2.5c0 1-1 1-1 2M12 2.5c0 1-1 1-1 2"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      );
+    case "sono":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 1 0 10.5 10.5Z" fill="currentColor" />
+        </svg>
+      );
+    case "palmas":
+      return (
+        <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8Z" fill="currentColor" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
 
 const ATRASO_FECHAR_MS = 350;
 
@@ -68,15 +140,12 @@ export function GatilhoDeAcoes({
           <button
             key={a.chave}
             type="button"
-            className="pp-acao"
+            className={`pp-acao pp-acao--${a.chave}`}
             title={a.rotulo}
             aria-label={`${a.rotulo} para ${nome}`}
-            onClick={() => {
-              onAcionar(a.tipo, a.reacao);
-              setAberto(false);
-            }}
+            onClick={() => onAcionar(a.tipo, a.reacao)}
           >
-            {a.simbolo}
+            <IconeAcao chave={a.chave} />
           </button>
         ))}
       </div>

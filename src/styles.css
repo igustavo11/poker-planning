@@ -541,12 +541,12 @@
   border-radius: var(--r-full, 999px);
   width: 24px;
   height: 24px;
-  font-size: 13px;
   line-height: 1;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: var(--gray-medium-dark, #3f3f3f);
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
@@ -554,6 +554,21 @@
   transform: translateY(-2px) scale(1.1);
   background: var(--gray-light-surface, #f4f4f5);
 }
+
+.pp-acao--aviao,
+.pp-voo--aviao { color: var(--complementary-medium, #00a0ec); }
+.pp-acao--bolinha,
+.pp-voo--bolinha { color: var(--gray-medium, #6f6f6f); }
+.pp-acao--tomate,
+.pp-voo--tomate { color: var(--error-medium, #d00040); }
+.pp-acao--fogo,
+.pp-voo--fogo { color: var(--primary-medium, #ff6b38); }
+.pp-acao--cafe,
+.pp-voo--cafe { color: var(--gray-dark, #1e1e1e); }
+.pp-acao--sono,
+.pp-voo--sono { color: var(--complementary-dark, #005ba3); }
+.pp-acao--palmas,
+.pp-voo--palmas { color: var(--warning-medium-dark, #d4940e); }
 
 .pp-carta {
   width: 52px;
@@ -659,18 +674,8 @@
   animation: pp-voar 1.5s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
 }
 
-.pp-voo--aviao { color: var(--complementary-medium, #00a0ec); }
-.pp-voo--bolinha { color: var(--gray-light, #ddd); }
-.pp-voo--tomate { color: var(--error-medium, #d00040); }
-
 .pp-voo--reacao {
   animation: pp-reagir 1.5s ease-out forwards;
-  font-size: 28px;
-}
-
-.pp-voo__reacao {
-  font-size: 28px;
-  line-height: 1;
 }
 
 @keyframes pp-voar {
