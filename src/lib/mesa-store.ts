@@ -42,13 +42,16 @@ export type Mesa = {
   placar: Record<string, number>;
   criadorId: string | null;
   votacaoIniciadaEm: number;
+  duracaoVotacaoSegundos: number;
 };
 
 export const CARTAS = ["1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "?", "cafe"] as const;
 
 export const CORES = 8;
 
-export const DURACAO_VOTACAO_SEGUNDOS = 30;
+export const DURACAO_VOTACAO_PADRAO = 30;
+
+export const OPCOES_DURACAO_VOTACAO = [15, 30, 45, 60, 90, 120];
 
 const CHAVE_PERFIL = "poker-planning:perfil";
 
@@ -100,6 +103,7 @@ function mesaVazia(codigo: string): Mesa {
     placar: {},
     criadorId: null,
     votacaoIniciadaEm: Date.now(),
+    duracaoVotacaoSegundos: DURACAO_VOTACAO_PADRAO,
   };
 }
 
@@ -186,6 +190,11 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
     [atualizar],
   );
 
+  const definirDuracao = useCallback(
+    (duracaoVotacaoSegundos: number) => atualizar((atual) => ({ ...atual, duracaoVotacaoSegundos })),
+    [atualizar],
+  );
+
   const revelar = useCallback(
     () => atualizar((atual) => ({ ...atual, revelada: true })),
     [atualizar],
@@ -257,6 +266,7 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
     pronto,
     votar,
     definirHistoria,
+    definirDuracao,
     revelar,
     novaRodada,
     brincar,

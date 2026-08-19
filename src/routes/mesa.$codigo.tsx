@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  DURACAO_VOTACAO_SEGUNDOS,
+  OPCOES_DURACAO_VOTACAO,
   estatisticas,
   lerPerfil,
   rotuloCarta,
@@ -45,10 +45,8 @@ function MesaPage() {
     setPerfil(p);
   }, [navigate]);
 
-  const { mesa, votar, definirHistoria, revelar, novaRodada, brincar, sair } = useMesa(
-    codigo,
-    perfil,
-  );
+  const { mesa, votar, definirHistoria, definirDuracao, revelar, novaRodada, brincar, sair } =
+    useMesa(codigo, perfil);
 
   useEffect(() => {
     if (!aviso) return;
@@ -75,10 +73,10 @@ function MesaPage() {
   }, []);
 
   const segundosRestantes = mesa.revelada
-    ? DURACAO_VOTACAO_SEGUNDOS
+    ? mesa.duracaoVotacaoSegundos
     : Math.max(
         0,
-        DURACAO_VOTACAO_SEGUNDOS - Math.floor((agora - mesa.votacaoIniciadaEm) / 1000),
+        mesa.duracaoVotacaoSegundos - Math.floor((agora - mesa.votacaoIniciadaEm) / 1000),
       );
 
   const autoRevelouRef = useRef<number | null>(null);
@@ -146,11 +144,27 @@ function MesaPage() {
           onAcionar={(p, tipo, reacao) => brincar(p.id, tipo, reacao)}
         >
           {mesa.revelada ? null : (
-            <span
-              className={`pp-cronometro${segundosRestantes <= 10 ? " pp-cronometro--urgente" : ""}`}
-            >
-              {segundosRestantes}s
-            </span>
+            <div className="pp-cronometro-linha">
+              <span
+                className={`pp-cronometro${segundosRestantes <= 10 ? " pp-cronometro--urgente" : ""}`}
+              >
+                {segundosRestantes}s
+              </span>
+              {souCriador ? (
+                <select
+                  className="pp-cronometro-select"
+                  value={mesa.duracaoVotacaoSegundos}
+                  onChange={(e) => definirDuracao(Number(e.target.value))}
+                  aria-label="Tempo para votar por rodada"
+                >
+                  {OPCOES_DURACAO_VOTACAO.map((segundos) => (
+                    <option key={segundos} value={segundos}>
+                      {segundos}s por rodada
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+            </div>
           )}
           {mesa.revelada ? (
             podeControlar ? (

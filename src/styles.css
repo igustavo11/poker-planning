@@ -191,8 +191,16 @@
   margin-inline: auto;
 }
 
-.pp-superficie {
+.pp-linha-central {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5, 20px);
   width: 100%;
+}
+
+.pp-superficie {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 140px;
   border-radius: var(--r-2xl, 28px);
   background: var(--gray-light-surface, #f4f4f5);
@@ -203,7 +211,7 @@
   padding: var(--sp-5, 20px);
 }
 
-.pp-fileira {
+.pp-fileira-lateral {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -238,6 +246,22 @@
 .pp-cronometro--urgente {
   color: var(--error-medium, #d00040);
   border-color: var(--error-medium, #d00040);
+}
+
+.pp-cronometro-linha {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2, 8px);
+}
+
+.pp-cronometro-select {
+  font-size: 12px;
+  color: var(--gray-medium-dark, #3f3f3f);
+  border: 1px solid var(--gray-light-border, #e6e6e6);
+  border-radius: var(--r-full, 999px);
+  background: var(--base-white, #fff);
+  padding: 2px 10px;
+  cursor: pointer;
 }
 
 
@@ -452,6 +476,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
   width: 124px;
   text-align: center;

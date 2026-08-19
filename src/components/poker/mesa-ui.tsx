@@ -139,6 +139,36 @@ export function LugarParticipante({
   );
 }
 
+/** Hash estável (não muda de sessão pra sessão) só pra embaralhar quem senta onde. */
+function hashId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    h = (h * 31 + id.charCodeAt(i)) | 0;
+  }
+  return h;
+}
+
+const PADRAO_ASSENTOS = ["esquerda", "topo", "topo", "topo", "direita", "base", "base", "base"] as const;
+
+type Lado = (typeof PADRAO_ASSENTOS)[number];
+
+/** Distribui os jogadores ao redor de uma mesa retangular: 1 em cada ponta,
+ * até 3 de cada lado — em vez de uma fileira única, que não parece uma mesa. */
+function distribuirAssentos(jogadores: Participante[]) {
+  const embaralhados = [...jogadores].sort((a, b) => hashId(a.id) - hashId(b.id));
+  const grupos: Record<Lado, Participante[]> = { esquerda: [], topo: [], direita: [], base: [] };
+  embaralhados.forEach((p, i) => {
+    const lado = PADRAO_ASSENTOS[i];
+    if (lado) {
+      grupos[lado].push(p);
+    } else {
+      // mais de 8 jogadores: estende o lado mais curto em vez de esconder alguém.
+      grupos[grupos.topo.length <= grupos.base.length ? "topo" : "base"].push(p);
+    }
+  });
+  return grupos;
+}
+
 export function MesaHorizontal({
   jogadores,
   revelada,
@@ -152,23 +182,35 @@ export function MesaHorizontal({
   onAcionar: (p: Participante, tipo: TipoBrincadeira, reacao?: string) => void;
   children: React.ReactNode;
 }) {
+  const { esquerda, topo, direita, base } = distribuirAssentos(jogadores);
+  const ponta = esquerda[0];
+  const pontaOposta = direita[0];
+
+  function lugar(p: Participante) {
+    return (
+      <LugarParticipante
+        key={p.id}
+        participante={p}
+        revelada={revelada}
+        souEu={p.id === meuId}
+        onAcionar={(tipo, reacao) => onAcionar(p, tipo, reacao)}
+      />
+    );
+  }
+
   return (
     <div className="pp-arena">
-      <div className="pp-superficie">
-        <div className="pp-superficie__centro">{children}</div>
+      {topo.length > 0 ? <div className="pp-fileira-lateral">{topo.map(lugar)}</div> : null}
+
+      <div className="pp-linha-central">
+        {ponta ? lugar(ponta) : null}
+        <div className="pp-superficie">
+          <div className="pp-superficie__centro">{children}</div>
+        </div>
+        {pontaOposta ? lugar(pontaOposta) : null}
       </div>
 
-      <div className="pp-fileira">
-        {jogadores.map((p) => (
-          <LugarParticipante
-            key={p.id}
-            participante={p}
-            revelada={revelada}
-            souEu={p.id === meuId}
-            onAcionar={(tipo, reacao) => onAcionar(p, tipo, reacao)}
-          />
-        ))}
-      </div>
+      {base.length > 0 ? <div className="pp-fileira-lateral">{base.map(lugar)}</div> : null}
     </div>
   );
 }
