@@ -41,7 +41,8 @@ export type Mesa = {
   brincadeiras: Brincadeira[];
   placar: Record<string, number>;
   criadorId: string | null;
-  votacaoIniciadaEm: number;
+  /** null = cronômetro pausado, aguardando o criador iniciar a rodada. */
+  votacaoIniciadaEm: number | null;
   duracaoVotacaoSegundos: number;
 };
 
@@ -102,7 +103,7 @@ function mesaVazia(codigo: string): Mesa {
     brincadeiras: [],
     placar: {},
     criadorId: null,
-    votacaoIniciadaEm: Date.now(),
+    votacaoIniciadaEm: null,
     duracaoVotacaoSegundos: DURACAO_VOTACAO_PADRAO,
   };
 }
@@ -195,6 +196,11 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
     [atualizar],
   );
 
+  const iniciarVotacao = useCallback(
+    () => atualizar((atual) => ({ ...atual, votacaoIniciadaEm: Date.now() })),
+    [atualizar],
+  );
+
   const revelar = useCallback(
     () => atualizar((atual) => ({ ...atual, revelada: true })),
     [atualizar],
@@ -223,7 +229,7 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
           revelada: false,
           historia: "",
           historico,
-          votacaoIniciadaEm: Date.now(),
+          votacaoIniciadaEm: null,
           participantes: atual.participantes.map((p) => ({ ...p, voto: null })),
         };
       }),
@@ -267,6 +273,7 @@ export function useMesa(codigo: string, perfil: Perfil | null) {
     votar,
     definirHistoria,
     definirDuracao,
+    iniciarVotacao,
     revelar,
     novaRodada,
     brincar,

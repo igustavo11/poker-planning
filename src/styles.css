@@ -248,6 +248,10 @@
   border-color: var(--error-medium, #d00040);
 }
 
+.pp-cronometro--pausado {
+  border-style: dashed;
+}
+
 .pp-cronometro-linha {
   display: flex;
   align-items: center;

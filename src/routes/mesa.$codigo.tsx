@@ -45,8 +45,17 @@ function MesaPage() {
     setPerfil(p);
   }, [navigate]);
 
-  const { mesa, votar, definirHistoria, definirDuracao, revelar, novaRodada, brincar, sair } =
-    useMesa(codigo, perfil);
+  const {
+    mesa,
+    votar,
+    definirHistoria,
+    definirDuracao,
+    iniciarVotacao,
+    revelar,
+    novaRodada,
+    brincar,
+    sair,
+  } = useMesa(codigo, perfil);
 
   useEffect(() => {
     if (!aviso) return;
@@ -72,16 +81,19 @@ function MesaPage() {
     return () => window.clearInterval(id);
   }, []);
 
-  const segundosRestantes = mesa.revelada
-    ? mesa.duracaoVotacaoSegundos
-    : Math.max(
-        0,
-        mesa.duracaoVotacaoSegundos - Math.floor((agora - mesa.votacaoIniciadaEm) / 1000),
-      );
+  const votacaoIniciada = mesa.votacaoIniciadaEm !== null;
+  const segundosRestantes =
+    mesa.revelada || mesa.votacaoIniciadaEm === null
+      ? mesa.duracaoVotacaoSegundos
+      : Math.max(
+          0,
+          mesa.duracaoVotacaoSegundos - Math.floor((agora - mesa.votacaoIniciadaEm) / 1000),
+        );
 
   const autoRevelouRef = useRef<number | null>(null);
   useEffect(() => {
     if (mesa.revelada) return;
+    if (mesa.votacaoIniciadaEm === null) return;
     if (segundosRestantes > 0) return;
     if (votos.length === 0) return;
     if (!podeControlar) return;
@@ -145,11 +157,15 @@ function MesaPage() {
         >
           {mesa.revelada ? null : (
             <div className="pp-cronometro-linha">
-              <span
-                className={`pp-cronometro${segundosRestantes <= 10 ? " pp-cronometro--urgente" : ""}`}
-              >
-                {segundosRestantes}s
-              </span>
+              {votacaoIniciada ? (
+                <span
+                  className={`pp-cronometro${segundosRestantes <= 10 ? " pp-cronometro--urgente" : ""}`}
+                >
+                  {segundosRestantes}s
+                </span>
+              ) : (
+                <span className="pp-cronometro pp-cronometro--pausado">Pausado</span>
+              )}
               {souCriador ? (
                 <select
                   className="pp-cronometro-select"
@@ -177,6 +193,18 @@ function MesaPage() {
               </button>
             ) : (
               <span className="pp-superficie__dica">Aguardando nova rodada</span>
+            )
+          ) : !votacaoIniciada ? (
+            podeControlar ? (
+              <button
+                type="button"
+                className="ab-btn ab-btn--md ab-btn--primary"
+                onClick={iniciarVotacao}
+              >
+                Iniciar rodada
+              </button>
+            ) : (
+              <span className="pp-superficie__dica">Aguardando o criador iniciar</span>
             )
           ) : podeRevelar ? (
             <button
