@@ -454,6 +454,7 @@
 }
 
 .pp-lugar__pessoa {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -466,25 +467,56 @@
   white-space: nowrap;
 }
 
-.pp-provocar {
-  border: 1px solid var(--gray-light, #ddd);
-  background: var(--base-white, #fff);
-  color: var(--gray-medium-dark, #3f3f3f);
-  border-radius: var(--r-full, 999px);
-  width: 26px;
-  height: 26px;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+.pp-observador {
+  position: relative;
 }
 
-.pp-lugar:hover .pp-provocar,
-.pp-provocar:focus-visible,
-.pp-observador:hover .pp-provocar {
+.pp-acoes {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 2px);
+  margin-top: 2px;
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: var(--r-full, 999px);
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-light, #ddd);
+  box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 5;
+}
+
+.pp-lugar:hover .pp-acoes,
+.pp-lugar:focus-within .pp-acoes,
+.pp-observador:hover .pp-acoes,
+.pp-observador:focus-within .pp-acoes {
   opacity: 1;
-  transform: translateY(-2px);
-  border-color: var(--primary-medium, #ff6b38);
+  pointer-events: auto;
+  transform: translate(-50%, 6px);
+}
+
+.pp-acao {
+  border: none;
+  background: transparent;
+  border-radius: var(--r-full, 999px);
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.pp-acao:hover {
+  transform: translateY(-2px) scale(1.1);
+  background: var(--gray-light-surface, #f4f4f5);
 }
 
 @keyframes pp-respira {
@@ -674,7 +706,15 @@
     height: 64px;
   }
 
-  .pp-provocar {
+  .pp-acoes {
     opacity: 1;
+    pointer-events: auto;
+    position: static;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin-top: 0;
   }
 }

@@ -1,15 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  estatisticas,
-  lerPerfil,
-  rotuloCarta,
-  useMesa,
-  type Participante,
-  type Perfil,
-  type TipoBrincadeira,
-} from "@/lib/mesa-store";
-import { Avatar, BaralhoFibonacci, MesaOval } from "@/components/poker/mesa-ui";
+import { estatisticas, lerPerfil, rotuloCarta, useMesa, type Perfil } from "@/lib/mesa-store";
+import { Avatar, BarraDeAcoes, BaralhoFibonacci, MesaOval } from "@/components/poker/mesa-ui";
 import { CamadaBrincadeiras } from "@/components/poker/CamadaBrincadeiras";
 
 export const Route = createFileRoute("/mesa/$codigo")({
@@ -31,18 +23,10 @@ export const Route = createFileRoute("/mesa/$codigo")({
   component: MesaPage,
 });
 
-const REACOES = [
-  { chave: "fogo", simbolo: "🔥", rotulo: "Fogo" },
-  { chave: "cafe", simbolo: "☕", rotulo: "Café" },
-  { chave: "sono", simbolo: "💤", rotulo: "Sono" },
-  { chave: "palmas", simbolo: "👏", rotulo: "Palmas" },
-];
-
 function MesaPage() {
   const { codigo } = Route.useParams();
   const navigate = useNavigate();
   const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [alvo, setAlvo] = useState<Participante | null>(null);
   const [aviso, setAviso] = useState("");
 
   useEffect(() => {
@@ -71,12 +55,6 @@ function MesaPage() {
   const votos = jogadores.filter((p) => p.voto).map((p) => p.voto as string);
   const stats = useMemo(() => (mesa.revelada ? estatisticas(votos) : null), [mesa.revelada, votos]);
   const podeRevelar = !mesa.revelada && votos.length > 0;
-
-  function acionar(tipo: TipoBrincadeira, reacao?: string) {
-    if (!alvo) return;
-    brincar(alvo.id, tipo, reacao);
-    setAlvo(null);
-  }
 
   async function copiarLink() {
     try {
@@ -129,7 +107,7 @@ function MesaPage() {
           jogadores={jogadores}
           revelada={mesa.revelada}
           meuId={perfil?.id ?? null}
-          onBrincar={(p) => setAlvo(p)}
+          onAcionar={(p, tipo, reacao) => brincar(p.id, tipo, reacao)}
         >
           {mesa.revelada ? (
             <button
@@ -185,14 +163,10 @@ function MesaPage() {
                 <Avatar participante={p} tamanho="sm" />
                 <span className="ab-text-sm pp-nome">{p.nome}</span>
                 {p.id === perfil?.id ? null : (
-                  <button
-                    type="button"
-                    className="pp-provocar"
-                    aria-label={`Provocar ${p.nome}`}
-                    onClick={() => setAlvo(p)}
-                  >
-                    ✈
-                  </button>
+                  <BarraDeAcoes
+                    nome={p.nome}
+                    onAcionar={(tipo, reacao) => brincar(p.id, tipo, reacao)}
+                  />
                 )}
               </div>
             ))}
@@ -232,66 +206,6 @@ function MesaPage() {
           qualquer compartilhamento, é obrigatória a validação das informações.
         </p>
       </footer>
-
-
-      {alvo ? (
-        <div className="ab-modal-overlay">
-          <div className="ab-modal">
-            <div className="ab-modal__content">
-              <h2 className="ab-text-lg">Provocar {alvo.nome}</h2>
-              <p className="ab-text-sm ab-text-muted ab-mt-2">
-                Escolha o que voar até o card do colega.
-              </p>
-              <div className="ab-d-flex ab-gap-2 ab-wrap ab-mt-4">
-                <button
-                  type="button"
-                  className="ab-btn ab-btn--md ab-btn--primary"
-                  onClick={() => acionar("aviao")}
-                >
-                  Avião de papel
-                </button>
-                <button
-                  type="button"
-                  className="ab-btn ab-btn--md ab-btn--secondary-gray"
-                  onClick={() => acionar("bolinha")}
-                >
-                  Bolinha de papel
-                </button>
-                <button
-                  type="button"
-                  className="ab-btn ab-btn--md ab-btn--secondary-color"
-                  onClick={() => acionar("tomate")}
-                >
-                  Tomate
-                </button>
-              </div>
-              <div className="ab-modal__divider ab-mt-4" />
-              <span className="ab-text-sm ab-text-muted">Cutucar com reação</span>
-              <div className="ab-d-flex ab-gap-2 ab-wrap ab-mt-2">
-                {REACOES.map((r) => (
-                  <button
-                    key={r.chave}
-                    type="button"
-                    className="ab-btn ab-btn--sm ab-btn--tertiary"
-                    onClick={() => acionar("reacao", r.simbolo)}
-                  >
-                    {r.rotulo}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="ab-modal__footer">
-              <button
-                type="button"
-                className="ab-btn ab-btn--md ab-btn--link-gray"
-                onClick={() => setAlvo(null)}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <CamadaBrincadeiras brincadeiras={mesa.brincadeiras} />
     </div>

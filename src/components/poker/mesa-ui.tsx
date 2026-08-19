@@ -1,5 +1,48 @@
 import { useEffect, useRef } from "react";
-import { CARTAS, iniciais, rotuloCarta, type Participante } from "@/lib/mesa-store";
+import { CARTAS, iniciais, rotuloCarta, type Participante, type TipoBrincadeira } from "@/lib/mesa-store";
+
+export type Acao = {
+  chave: string;
+  tipo: TipoBrincadeira;
+  reacao?: string;
+  simbolo: string;
+  rotulo: string;
+};
+
+export const ACOES: Acao[] = [
+  { chave: "aviao", tipo: "aviao", simbolo: "✈️", rotulo: "Avião de papel" },
+  { chave: "bolinha", tipo: "bolinha", simbolo: "⚫", rotulo: "Bolinha de papel" },
+  { chave: "tomate", tipo: "tomate", simbolo: "🍅", rotulo: "Tomate" },
+  { chave: "fogo", tipo: "reacao", reacao: "🔥", simbolo: "🔥", rotulo: "Fogo" },
+  { chave: "cafe", tipo: "reacao", reacao: "☕", simbolo: "☕", rotulo: "Café" },
+  { chave: "sono", tipo: "reacao", reacao: "💤", simbolo: "💤", rotulo: "Sono" },
+  { chave: "palmas", tipo: "reacao", reacao: "👏", simbolo: "👏", rotulo: "Palmas" },
+];
+
+export function BarraDeAcoes({
+  nome,
+  onAcionar,
+}: {
+  nome: string;
+  onAcionar: (tipo: TipoBrincadeira, reacao?: string) => void;
+}) {
+  return (
+    <div className="pp-acoes">
+      {ACOES.map((a) => (
+        <button
+          key={a.chave}
+          type="button"
+          className="pp-acao"
+          title={a.rotulo}
+          aria-label={`${a.rotulo} para ${nome}`}
+          onClick={() => onAcionar(a.tipo, a.reacao)}
+        >
+          {a.simbolo}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Avatar({
   participante,
@@ -51,14 +94,14 @@ export function LugarParticipante({
   participante,
   revelada,
   souEu,
-  onBrincar,
+  onAcionar,
   x,
   y,
 }: {
   participante: Participante;
   revelada: boolean;
   souEu: boolean;
-  onBrincar: () => void;
+  onAcionar: (tipo: TipoBrincadeira, reacao?: string) => void;
   x: number;
   y: number;
 }) {
@@ -82,16 +125,7 @@ export function LugarParticipante({
       </div>
       <div className="pp-lugar__pessoa">
         <span className="ab-text-sm pp-nome">{participante.nome}</span>
-        {souEu ? null : (
-          <button
-            type="button"
-            className="pp-provocar"
-            aria-label={`Provocar ${participante.nome}`}
-            onClick={onBrincar}
-          >
-            ✈
-          </button>
-        )}
+        {souEu ? null : <BarraDeAcoes nome={participante.nome} onAcionar={onAcionar} />}
       </div>
     </div>
   );
@@ -101,14 +135,14 @@ export function MesaOval({
   jogadores,
   revelada,
   meuId,
-  onBrincar,
+  onAcionar,
   minimoLugares = 0,
   children,
 }: {
   jogadores: Participante[];
   revelada: boolean;
   meuId: string | null;
-  onBrincar: (p: Participante) => void;
+  onAcionar: (p: Participante, tipo: TipoBrincadeira, reacao?: string) => void;
   minimoLugares?: number;
   children: React.ReactNode;
 }) {
@@ -129,7 +163,7 @@ export function MesaOval({
             participante={p}
             revelada={revelada}
             souEu={p.id === meuId}
-            onBrincar={() => onBrincar(p)}
+            onAcionar={(tipo, reacao) => onAcionar(p, tipo, reacao)}
             x={x}
             y={y}
           />
